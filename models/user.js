@@ -1,5 +1,8 @@
 "use strict";
 
+const db = require('../db');
+const { BadRequestError } = require('../expressError');
+
 /** User of the site. */
 
 class User {
@@ -9,6 +12,14 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+    const result = await db.query(`
+      INSERT INTO users (username, password, first_name, last_name, phone)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING username, password, first_name, last_name, phone`,
+      [username, password, first_name, last_name, phone]);
+    const user = result.rows[0];
+    if (!user) throw new BadRequestError(`Could not create new user.`);
+    return user;
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
