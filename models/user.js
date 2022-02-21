@@ -65,6 +65,12 @@ class User {
    * [{username, first_name, last_name}, ...] */
 
   static async all() {
+    const result = await db.query(`
+    SELECT username, first_name, last_name
+    FROM users`);
+    const users = result.rows;
+    if (!users) throw new NotFoundError('No users');
+    return users;
   }
 
   /** Get: get user by username
@@ -77,6 +83,14 @@ class User {
    *          last_login_at } */
 
   static async get(username) {
+    const result = await db.query(`
+    SELECT username, first_name, last_name, phone, join_at, last_login_at
+    FROM users
+    WHERE username = $1`,
+      [username]);
+    const user = result.rows[0];
+    if (!user) throw new NotFoundError(`No user: ${username}`);
+    return user;
   }
 
   /** Return messages from this user.
@@ -88,6 +102,25 @@ class User {
    */
 
   static async messagesFrom(username) {
+    const messagesResult = await db.query(`
+    SELECT id, to_username, body, sent_at, read_at
+    FROM messages
+    WHERE from_username = $1`,
+      [username]);
+
+    const messages = messagesResult.rows;
+
+    for (let m of messages) {
+      const userResult = await db.query(`
+      SELECT username, first_name, last_name, phone
+      FROM users
+      WHERE username = $1`,
+        [m.to_username]);
+      m.to_user = userResult.rows[0];
+      delete m.to_username;
+    }
+
+    return messages;
   }
 
   /** Return messages to this user.
@@ -99,6 +132,22 @@ class User {
    */
 
   static async messagesTo(username) {
+    const messagesResult = await db.query(`
+    SELECT id, from_username, body, sent_at, read_at
+    FROM messages
+    WHERE to_username = $1`,
+      [username]);
+    const messages = messagesResult.rows;
+    for (let m of messages) {
+      const userResult = await db.query(`
+      SELECT id, first_name, last_name, phone
+      FROM users
+      WHERE username = $1`,
+        [m.from_username]);
+      m.from_user = userResult.rows[0];
+      delete m.from_username;
+    }
+    return messages;
   }
 }
 
