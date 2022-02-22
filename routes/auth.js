@@ -5,17 +5,19 @@ const User = require('../models/user');
 const { SECRET_KEY } = require('../config');
 const { UnauthorizedError } = require('../expressError');
 const router = new Router();
+const jwt = require("jsonwebtoken");
 
 /** POST /login: {username, password} => {token} */
-router.post('/', async function (req, res) {
+
+//in insomnia,
+router.post('/login', async function (req, res) {
   const { username, password } = req.body;
-  const tokenFromRequest = req.query._token || req.body._token;
   const user = await User.get(username);
-  // console.log(res.local.user);
 
   if (user) {
     if (await bcrypt.compare(password, user.password) === true) {
-      return res.json({ tokenFromRequest });
+      const token = jwt.sign({ username }, SECRET_KEY);
+      return res.json({ token });
     }
   }
 
@@ -28,7 +30,11 @@ router.post('/', async function (req, res) {
  */
 router.post('/register', async function (req, res) {
   const { username, password, first_name, last_name, phone } = req.body;
-  const user = await User.register(username, password, first_name, last_name, phone);
+
+  console.log(username, password, first_name, last_name, phone)
+  await User.register(username, password, first_name, last_name, phone);
+
+
   const token = jwt.sign({ username }, SECRET_KEY);
 
   return res.json({ token });
