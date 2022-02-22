@@ -30,12 +30,14 @@ router.get('/:id', ensureLoggedIn, async function (req, res) {
 
 /** POST / - post message.
  *
- * {to_username, body} =>
+ * {to_username, body, _token} =>
  *   {message: {id, from_username, to_username, body, sent_at}}
  *
  **/
 router.post('/', ensureLoggedIn, async function (req, res) {
   //destructure instead of adding something to the req.body
+
+  console.log("BODY: ", req.body);
   const from_username = res.locals.user.username;
   req.body.from_username = from_username;
   const message = await Message.create(req.body);
@@ -45,7 +47,7 @@ router.post('/', ensureLoggedIn, async function (req, res) {
 })
 
 /** POST/:id/read - mark message as read:
- *
+ *{_token}
  *  => {message: {id, read_at}}
  *
  * Makes sure that the only the intended recipient can mark as read.
