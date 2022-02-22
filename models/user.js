@@ -49,10 +49,7 @@ class User {
                   input password: ${password} \n
                   stored password hash : ${user.password}`)
 
-    if (await bcrypt.compare(password, user.password) === true) {
-      return true;
-    }
-    return false;
+    return await bcrypt.compare(password, user.password) === true;
   }
 
   /** Update last_login_at for user 
@@ -81,7 +78,7 @@ class User {
     SELECT username, first_name, last_name
     FROM users`);
     const users = result.rows;
-    if (!users) throw new NotFoundError('No users');
+    //if (!users) throw new NotFoundError('No users');
     return users;
   }
 
@@ -112,8 +109,8 @@ class User {
    * where to_user is
    *   {username, first_name, last_name, phone}
    */
-
   static async messagesFrom(username) {
+    //TODO: REFACTOR INTO A JOIN
     const messagesResult = await db.query(`
     SELECT id, to_username, body, sent_at, read_at
     FROM messages

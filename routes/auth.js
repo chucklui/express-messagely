@@ -23,6 +23,9 @@ router.post('/login', async function (req, res) {
  * {username, password, first_name, last_name, phone} => {token}.
  */
 router.post('/register', async function (req, res) {
+  //TODO: Make sure to put an if/then statement here,
+  //like above. make sure to send an error if the user 
+  //is not created properly
   const { username } = req.body;
   await User.register(req.body);
   const token = jwt.sign({ username }, SECRET_KEY);

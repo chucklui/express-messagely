@@ -35,6 +35,7 @@ router.get('/:id', ensureLoggedIn, async function (req, res) {
  *
  **/
 router.post('/', ensureLoggedIn, async function (req, res) {
+  //destructure instead of adding something to the req.body
   const from_username = res.locals.user.username;
   req.body.from_username = from_username;
   const message = await Message.create(req.body);
