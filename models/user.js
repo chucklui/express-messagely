@@ -2,7 +2,7 @@
 
 const db = require('../db');
 const { BCRYPT_WORK_FACTOR } = require('../config');
-const { BadRequestError, NotFoundError } = require('../expressError');
+const { BadRequestError, NotFoundError, UnauthorizedError } = require('../expressError');
 const bcrypt = require("bcrypt");
 
 /** User of the site. */
@@ -13,10 +13,7 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
-    console.log(username, password, first_name, last_name, phone );
-    console.log("Running User.register");
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-    console.log("hashed password:", hashedPassword);
     
     const result = await db.query(`
       INSERT INTO users (username, 
@@ -46,15 +43,17 @@ class User {
     );
     const user = result.rows[0];
 
-    if (!user) throw new NotFoundError(`Invalid username`);
+    if (!user) throw new UnauthorizedError(`Invalid username`);
 
     console.log(` Username: ${username} \n
                   input password: ${password} \n
                   stored password hash : ${user.password}`)
 
     if (await bcrypt.compare(password, user.password) === true) {
+      console.log("TRUE");
       return true;
     }
+    console.log("FALSE");
     return false;
   }
 
