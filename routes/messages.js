@@ -1,10 +1,9 @@
 "use strict";
 
 const Router = require("express").Router;
-const User = require('../models/user');
 const Message = require('../models/message');
 const { ensureLoggedIn } = require('../middleware/auth');
-const { NotFoundError, BadRequestError } = require('../expressError');
+const { NotFoundError, BadRequestError, UnauthorizedError } = require('../expressError');
 const router = new Router();
 
 /** GET /:id - get detail of message.
@@ -23,6 +22,7 @@ router.get('/:id', ensureLoggedIn, async function (req, res) {
   const username = res.locals.user.username;
   const message = await Message.get(req.params.id);
   if (!message) throw new NotFoundError('Message Not Found');
+
   if (message.from_user.username === username || message.to_user.username === username) {
     return res.json({ message });
   }
@@ -38,7 +38,8 @@ router.post('/', ensureLoggedIn, async function (req, res) {
   const from_username = res.locals.user.username;
   req.body.from_username = from_username;
   const message = await Message.create(req.body);
-  if (!message) throw new BadRequestError('Not allow to post message');
+  if (!message) throw new BadRequestError("Couldn't post message");
+
   return res.json({ message });
 })
 
@@ -49,6 +50,17 @@ router.post('/', ensureLoggedIn, async function (req, res) {
  * Makes sure that the only the intended recipient can mark as read.
  *
  **/
+router.post('/:id/read', ensureLoggedIn, async function (req, res){
+  const id = req.params.id;
+  const foundMessage = await Message.get(id);
+  if(!foundMessage) throw new NotFoundError("Could not find message");
+
+  if( res.locals.user.username === foundMessage.to_user.username){
+    const message = await Message.markRead(id);
+    return res.json({ message});
+  }
+  throw new UnauthorizedError("You are not authorized to mark this message as read");
+})
 
 
 module.exports = router;

@@ -15,7 +15,7 @@ const User = require("../models/user");
  **/
 router.get("/", ensureLoggedIn, async function (req, res, next) {
     const users = await User.all();
-    console.log(users);
+    if(!users) throw new NotFoundError("No users found");
     return res.json({ users });
 });
 
@@ -30,7 +30,7 @@ router.get("/:username",
     ensureCorrectUser,
     async function (req, res, next) {
         const user = await User.get(req.params.username);
-        console.log(user);
+        if (!user) throw new NotFoundError(`User ${req.params.username} was not found`);
         return res.json({ user });
     });
 
@@ -49,6 +49,8 @@ router.get("/:username/to",
     ensureCorrectUser,
     async function (req, res, next) {
         const messages = await User.messagesTo(req.params.username);
+        if (!messages) throw new NotFoundError('Messages Not Found.');
+
         return res.json({ messages });
     });
 
@@ -67,7 +69,8 @@ router.get("/:username/from",
     ensureCorrectUser,
     async function (req, res, next) {
         const messages = await User.messagesFrom(req.params.username);
-        if (!messages) throw new NotFoundError('Messages Not Found.')
+        if (!messages) throw new NotFoundError('Messages Not Found.');
+
         return res.json({ messages });
     });
 
