@@ -3,6 +3,7 @@
 const { ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
 
 const Router = require("express").Router;
+const { NotFoundError } = require('../expressError');
 const router = new Router();
 const User = require("../models/user");
 
@@ -66,6 +67,7 @@ router.get("/:username/from",
     ensureCorrectUser,
     async function (req, res, next) {
         const messages = await User.messagesFrom(req.params.username);
+        if (!messages) throw new NotFoundError('Messages Not Found.')
         return res.json({ messages });
     });
 
