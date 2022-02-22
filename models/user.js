@@ -50,10 +50,8 @@ class User {
                   stored password hash : ${user.password}`)
 
     if (await bcrypt.compare(password, user.password) === true) {
-      console.log("TRUE");
       return true;
     }
-    console.log("FALSE");
     return false;
   }
 
