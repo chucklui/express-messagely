@@ -4,6 +4,8 @@ const db = require('../db');
 const { BadRequestError, NotFoundError } = require('../expressError');
 const bcrypt = require("bcrypt");
 
+const WORK_FACTOR = 12;
+
 /** User of the site. */
 class User {
 
@@ -12,11 +14,19 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+
+    const hashedPassword = await bcrypt.hash(password, WORK_FACTOR);
     const result = await db.query(`
-      INSERT INTO users (username, password, first_name, last_name, phone)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO users (username, 
+        password, 
+        first_name, 
+        last_name, 
+        phone,
+        join_at,
+        last_login_at)
+      VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
       RETURNING username, password, first_name, last_name, phone`,
-      [username, password, first_name, last_name, phone]);
+      [username, hashedPassword, first_name, last_name, phone]);
     const user = result.rows[0];
     if (!user) throw new BadRequestError(`Could not create new user.`);
     return user;
@@ -36,11 +46,14 @@ class User {
 
     if (!user) throw new NotFoundError(`Invalid username`);
 
+    console.log(` Username: ${username} \n
+                  input password: ${password} \n
+                  stored password hash : ${user.password}`)
+
     if (await bcrypt.compare(password, user.password) === true) {
       return true;
     }
     return false;
-
   }
 
   /** Update last_login_at for user 
@@ -140,7 +153,7 @@ class User {
     const messages = messagesResult.rows;
     for (let m of messages) {
       const userResult = await db.query(`
-      SELECT id, first_name, last_name, phone
+      SELECT username, first_name, last_name, phone
       FROM users
       WHERE username = $1`,
         [m.from_username]);
