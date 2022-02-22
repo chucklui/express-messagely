@@ -1,10 +1,9 @@
 "use strict";
 
 const db = require('../db');
+const { BCRYPT_WORK_FACTOR } = require('../config');
 const { BadRequestError, NotFoundError } = require('../expressError');
 const bcrypt = require("bcrypt");
-
-const WORK_FACTOR = 12;
 
 /** User of the site. */
 class User {
@@ -15,7 +14,7 @@ class User {
 
   static async register({ username, password, first_name, last_name, phone }) {
 
-    const hashedPassword = await bcrypt.hash(password, WORK_FACTOR);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
     const result = await db.query(`
       INSERT INTO users (username, 
         password, 
